@@ -34,6 +34,7 @@ from io import BufferedWriter, TextIOWrapper
 from logging import getLogger
 from os import getenv
 from queue import Queue
+from multiprocessing.queues import JoinableQueue
 from threading import Event, Thread
 
 from certifi import where as findcacerts
@@ -695,6 +696,12 @@ class GNSSNTRIPClient:
                 output.write(str(parsed))
             elif isinstance(output, Queue):
                 output.put(raw if self.__app == CLIAPP else (raw, parsed))
+            elif isinstance(output, JoinableQueue):
+                output.put(raw if self.__app == CLIAPP else (raw, parsed))
+            elif isinstance(output, list):
+                for o in output:
+                    if isinstance(o, JoinableQueue):
+                        o.put(raw if self.__app == CLIAPP else (raw, parsed))
             elif isinstance(output, socket.socket):
                 output.sendall(raw)
 
